@@ -11,8 +11,24 @@
         android:text="Load"
         android:id="@+id/button"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        tools:ignore="MissingConstraints" />
 
+    <Button
+        android:text="unzip"
+       app:layout_constraintTop_toBottomOf="@id/button"
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:ignore="MissingConstraints" />
+
+    <Button
+        android:text="Set image"
+        app:layout_constraintTop_toBottomOf="@id/button2"
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:ignore="MissingConstraints" />
     <ImageView
         android:clickable="true"
         android:id="@+id/image"

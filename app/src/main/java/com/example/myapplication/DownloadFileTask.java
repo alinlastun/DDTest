@@ -4,9 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Environment;
-import android.support.annotation.RequiresApi;
 
 import com.dropbox.core.DbxException;
 import com.dropbox.core.v2.DbxClientV2;
@@ -48,7 +46,6 @@ class DownloadFileTask extends AsyncTask<FileMetadata, Void, File> {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected File doInBackground(FileMetadata... params) {
         FileMetadata metadata = params[0];
@@ -70,7 +67,7 @@ class DownloadFileTask extends AsyncTask<FileMetadata, Void, File> {
             // Download the file.
             try (OutputStream outputStream = new FileOutputStream(file)) {
                 mDbxClient.files().download(metadata.getPathLower(), metadata.getRev())
-                        .download(outputStream);
+                    .download(outputStream);
             }
 
             // Tell android about the file
