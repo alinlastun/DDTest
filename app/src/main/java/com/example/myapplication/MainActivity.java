@@ -1,25 +1,20 @@
 package com.example.myapplication;
 
 import android.Manifest;
-import android.app.DownloadManager;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.os.Environment;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dropbox.core.DbxDownloader;
@@ -27,35 +22,18 @@ import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.util.ProgressOutputStream;
 import com.dropbox.core.v2.DbxClientV2;
-import com.dropbox.core.v2.files.DownloadErrorException;
+import com.dropbox.core.v2.filerequests.CountFileRequestsResult;
 import com.dropbox.core.v2.files.DownloadZipResult;
 import com.dropbox.core.v2.files.FileMetadata;
-import com.dropbox.core.v2.files.GetMetadataErrorException;
-import com.dropbox.core.v2.files.ListFolderResult;
-import com.dropbox.core.v2.files.Metadata;
-import com.dropbox.core.v2.files.UploadErrorException;
-import com.dropbox.core.v2.users.FullAccount;
 
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.Enumeration;
-
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import static com.example.myapplication.DropboxDownloadAndUnzipTask.DBX_DOWN_DIR;
 
 public class MainActivity extends AppCompatActivity {
     Button button,button2,button3;
@@ -81,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 Drawable  pressedads=  getImageFromStorage3("megathemes_animals4khd_sms_plus","btn_emoji_state_pressed");
                 myImageView.setImageDrawable(pressedads);
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -120,37 +99,42 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void downloadZIp(DbxClientV2 client,String nameDir) {
-        AppExecutors.getInstance().diskIO().execute(new Runnable() {
-            @Override
-            public void run() {
-                DbxDownloader<DownloadZipResult> downloader = null;
-                try {
-                    downloader = client.files().downloadZip("/" + nameDir);
-                    //downloader  = client.files().download("/megathemes_animals4khd_sms_plus.zip");
+        AppExecutors.getInstance().diskIO().execute(() -> {
+            DbxDownloader<FileMetadata> downloader = null;
+            try {
+               // downloader = client.files().downloadZip("/" + nameDir);
+                downloader  = client.files().download("/megathemes_animals4khd_sms_plus.zip");
 
+            } catch (DbxException e) {
+                e.printStackTrace();
+            }
+            try {
+                String filePath = getFilesDir().getPath() +"/"+ nameDir +".zip";
+                File f = new File(filePath);
+                getPermissionToReadExternal();
+                FileOutputStream out = new FileOutputStream(f);
+                if (downloader != null) {
 
-                } catch (DbxException e) {
-                    e.printStackTrace();
+                    long totalSize =  downloader.getResult().getSize();
+                    downloader.download(new ProgressOutputStream(out),bytesWritten -> {
+                        int percent = (int) ((bytesWritten*100)/totalSize);
+                        if(percent==100){
+                            unzip3(nameDir);
+                            File dir = new File(getFilesDir().getPath());
+                            File file = new File(dir, "megathemes_animals4khd_sms_plus.zip");
+                            file.delete();
+                        }
+                        Log.d("ASdfasdf", String.valueOf(percent));
+                    });
+
                 }
-                try {
-                    String filePath = getFilesDir().getPath() +"/"+ nameDir +".zip";
-                    File f = new File(filePath);
-                    getPermissionToReadExternal();
-                    FileOutputStream out = new FileOutputStream(f);
-                    if (downloader != null) {
-                        downloader.download(new ProgressOutputStream(out),bytesWritten -> {
-                            Log.d("ASdfasdf", String.valueOf(bytesWritten));
-                        });
-
-                    }
-                    out.close();
-                } catch (DbxException ex) {
-                    System.out.println(ex.getMessage());
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                out.close();
+            } catch (DbxException ex) {
+                System.out.println(ex.getMessage());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         });
     }
